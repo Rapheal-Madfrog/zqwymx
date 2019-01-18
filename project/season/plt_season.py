@@ -37,11 +37,13 @@ def plt_season(com_name, keep_yjfl=True, mohu=True):
     data = data.loc[~index_remain, :]
     if True:
         list_remain = ['名称', '报告期',
-                       '短期债务/总债务',
-                       '货币资金/短期债务', '净利润(亿元)', '筹资活动现金流(亿元)',
-                       '主营业务利润率(%)', '投资活动现金流(亿元)',
-                       '净资产回报率(%)', '流动比率',
-                       '资产负债率', ]
+                       '资产负债率', '短期债务/总债务',
+                       '总债务(亿元)', '流动比率', '货币资金/短期债务',
+
+                       '投资活动现金流(亿元)', '筹资活动现金流(亿元)',
+
+                       '净利润(亿元)', '净资产回报率(%)'
+                       ]
         cols_a = list(data)
         for index_, col in enumerate(list_remain):
             cols_a.insert(index_, cols_a.pop(cols_a.index(col)))
@@ -164,15 +166,17 @@ def plt_season(com_name, keep_yjfl=True, mohu=True):
     if True:
         change_index = True
         if change_index:
-            list_remain = ['名称', '报告期', '最新评级', '短期债务/总债务',
-                           '货币资金/短期债务', '净利润(亿元)', '筹资活动现金流(亿元)',
-                           '主营业务利润率(%)', '投资活动现金流(亿元)',
-                           '净资产回报率(%)', '流动比率',
-                           '资产负债率',
-                           '经营活动现金流/短期债务', '可供投资现金流(亿元)']
-            sorted_remain = [i[0] for i in weight if i[0] in list_remain]
-            list_remain = ['名称', '报告期', '最新评级'] + sorted_remain
-            del sorted_remain
+            list_remain = ['名称', '报告期', '最新评级',
+                           '资产负债率', '短期债务/总债务',
+                           '总债务(亿元)', '流动比率', '货币资金/短期债务',
+                           '经营活动现金流/短期债务',
+                           '投资活动现金流(亿元)', '筹资活动现金流(亿元)',
+                           '可供投资现金流(亿元)',
+                           '净利润(亿元)', '净资产回报率(%)'
+                           ]
+            # sorted_remain = [i[0] for i in weight if i[0] in list_remain]
+            # list_remain = ['名称', '报告期', '最新评级'] + sorted_remain
+            # del sorted_remain
 
             cols_a = list(data)
             for index_, col in enumerate(list_remain):
@@ -194,29 +198,36 @@ def plt_season(com_name, keep_yjfl=True, mohu=True):
     weight = dict(weight)
     weight = [-weight[i] if (i == '短期债务/总债务' or i == '资产负债率')
               else weight[i]
-              for i in data.columns[3:]]
+              for i in list_remain[3:]]
     weight = [j/sum(np.abs(weight)) for j in weight]
     data.loc[:, '加权平均'] = data.iloc[:, 3:].values.dot(np.array(weight).reshape(-1, 1))
     weight.append(1)
+    list_remain.append('加权平均')
     #plt
     data.set_index('报告期', drop=False, inplace=True)
 
     name2index = {name: index+1 for index, name in enumerate(set(data['名称']))}
 
     plt.figure(figsize=(20, 10), dpi=250)
-    for k in range(3, len(list(data))):
+    n = 3
+    r = 4
+    c = 3
+    f_transpose = lambda x: n + (x + (c - n)) % c * r + (x - n) // c
+    for k in range(n, len(list(data))):
         if k == len(list(data))-1:
             i = k+1
         else:
             i = k+1
-        ax = plt.subplot(4, 3, i-3)
+        ax = plt.subplot(r, c, i-n)
         ax.plot(list(set(data.index)), [0] * len(list(set(data.index))),
                 color=cm.get_cmap('Set1')(0), linewidth=1)
+        k = f_transpose(k)
         for j in set(data['名称']):
-            data.loc[data['名称'].isin([j]), :].iloc[:, k].plot(label=j,
-                                                              color=cm.get_cmap('Set1')(name2index[j]))
+            data.loc[data['名称'].isin([j]), :]\
+                .iloc[:, k]\
+                .plot(label=j, color=cm.get_cmap('Set1')(name2index[j]))
         ax.legend(loc='best', prop={'size': 10})
-        ax.set_title(data.columns[k]+': '+str(round(abs(weight[k-3]), 2)))
+        ax.set_title(list_remain[k]+': '+str(round(abs(weight[k-n]), 2)))
         ax.spines['right'].set_color('none')
         ax.spines['top'].set_color('none')
         ax.set_xlabel('')
@@ -304,5 +315,5 @@ def plt_season(com_name, keep_yjfl=True, mohu=True):
 
 
 if __name__ == '__main__':
-    com_name = ['泸州老窖', '古井', ]
+    com_name = ['巨化集团', '上海华谊', ]
     plt_season(com_name, True, mohu=True)
