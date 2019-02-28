@@ -2,7 +2,7 @@
 
 from functools import reduce
 import numpy as np
-from highpackage.diyttsplit import DiyttSplit
+# from highpackage.diyttsplit import DiyttSplit
 from xgboost import XGBClassifier
 import xgboost as xgb
 from sklearn.model_selection import GridSearchCV
@@ -17,20 +17,20 @@ class DiyXgbCv(object):
         self.cv_folds = cv_folds
         param_tests = [[{'max_depth': [range(3, 10, 2),
                                        'small_int']},
-                        {'min_child_weight': [range(1, 8, 2),
-                                              'small_int']},
+                        {'min_child_weight': [[i for i in np.linspace(0.3, 1, 8)],
+                                              'no_zero_percentage']},
                         {'scale_pos_weight': [[i for i in np.linspace(1, 9, 7)],
                                               'float']}
                         ],
                        [{'gamma': [[0] + [i for i in np.geomspace(0.1, 10, 10)],
                                    'geom']}
                         ],
+                       # [{'subsample': [[i for i in np.linspace(0.3, 1, 8)],
+                       #                 'no_zero_percentage']},
+                       #  {'min_child_weight': [[i for i in np.linspace(0.3, 1, 8)],
+                       #                        'no_zero_percentage']}
+                       #  ],
                        [{'subsample': [[i for i in np.linspace(0.3, 1, 8)],
-                                       'no_zero_percentage']},
-                        {'min_child_weight': [[i for i in np.linspace(0.3, 1, 8)],
-                                              'no_zero_percentage']}
-                        ],
-                       [{'subsample': ['last',
                                        'no_zero_percentage']},
                         {'min_child_weight': ['last',
                                               'no_zero_percentage']},

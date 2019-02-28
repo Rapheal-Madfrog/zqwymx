@@ -29,17 +29,51 @@ def predict(begin_of_year, end_of_year,
             per_re_0=0.75, num_data=200,
             fillna=False, cv='auto'):
 
+    '''
+    :param int begin_of_year: 开始的年份, 默认为2013年
+    :param int end_of_year: 结束的年份, 一般为数据最新的年度
+    :param str time_style: 三种可选: 默认为season
+    1. year - 年度模型
+    2. half_year - 半年模型
+    3. season - 季度模型
+    :param int time_delta: 预测的时间差. 默认为2. 如果为1,即去年预测今年, 或者上半年预测下半年, 二季度预测三季度.
+    :param bool simple: 指标是否人为挑选. 默认为False. 如果为True, 筛选的指标在 DiyttSplit 函数中
+    :param bool constant: 是否连续. 该指标只有在 time_delta >= 2 时有用. 默认为 True.
+    如果为True, 且time_delta=2, 以season为例, 三季度违约, 一季度和二季度同时判定为违约样本, 以二季度为界, 截
+    断该公司样本.
+    如果为False, 则三季度违约, 则一季度判定为违约样本, 并以一季度为界, 截断该公司样本.
+    :param float per_re_0: 这是一个百分数, 控制违约公司违约前的样本的比例, 以平衡样本.
+    :param int num_data: 这是一个整数, 控制未违约公司的样本的数量, 以平衡样本.
+    :param bool fillna: 如果已经填充过空白值, 则选择False, 直接读取即可.
+    如果没有填充过, 则选择True, 填充完成后会保存, 下次读取即可.
+    :param list(int)|str cv: 接受一个列表, 列表里面是整数. 默认为字符串'auto'.
+    *** 0 删除模型  1 弹性训练 预测不用  2 弹性训练 预测用  3 刚性训练 预测用
+    *** 弹性训练: 如果检测到有对应的老模型, 则不训练
+    *** 刚性训练: 无论如何, 重新训练
+    *** 0 删除老模型, 不训练并且不训练, 也不在stack里
+    *** 1 弹性训练, 不在stack里
+    *** 2 弹性训练, 在stack里
+    *** 3 刚性训练, 在stack里
+    *** 'auto' 即 老模型有几个, 就几个是2, 剩余的都是3
+    *** 推荐用自定义列表
+    :return:
+    '''
+
+    # 读取公司信息
     com_data = ComLoader(industry_ss=True).loader()
+    # 填充完的路径
     a_path = f'./project/{time_style}/{time_delta}_{begin_of_year}-{end_of_year}.csv'
+    # 模型路径
     w_path = f'./project/{time_style}/{time_delta}_weight_{begin_of_year}-{end_of_year}.m'
 
     if fillna:
         # 读取财报data, 违约数据re_data
         # 违约数据取第一次违约记录(在ReLoader中)
+        # 返回财报数据和违约数据
         data, re_data = ReLoader(begin_of_year, end_of_year,
                                  time_style=time_style,
                                  whether_plt=False).loader()
-
+        # 填充空白值
         filldata = FillData(time_style=time_style,
                             time_delta=time_delta,
                             a_save_path=a_path, w_save_path=w_path,

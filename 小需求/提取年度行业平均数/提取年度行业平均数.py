@@ -31,11 +31,6 @@ def drop_out(frame, col, ):
         return frame
 
 
-def abc(frame):
-    frame['123'] = [len(frame)]*len(frame)
-    return frame
-
-
 def diy_mean(df: pd.DataFrame, weight):
     weight = weight.map(lambda x: x / sum(weight)).values.reshape(1, -1)
 
@@ -70,7 +65,6 @@ data = DataLoader(2003, 2017, path='../../data/',
                   whether_plt=False).loader(ss=False)
 data = data.iloc[:, :-1]
 data = com_data.merge(data, on='名称', how='inner').reset_index(drop=True)
-# data = data.groupby(['二级分类', '报告期']).apply(lambda x: abc(x))
 # data.groupby(['二级分类', '报告期']).mean().to_csv('./年度行业统计.csv', encoding='utf_8_sig')
 
 # drop_out_list = data.columns[3:-1]
@@ -82,7 +76,7 @@ for j in drop_out_list:
     data = data.groupby(['二级分类', '报告期']).apply(lambda x: drop_out(x, j))
 data.reset_index(drop=True, inplace=True)
 
-data.groupby(['二级分类', '报告期'], as_index=False).mean().to_csv('./去异年度行业统计.csv', encoding='utf_8_sig')
+data.groupby(['二级分类', '报告期'], as_index=False).mean().to_csv('./去异年度行业统计.csv', encoding='utf_8_sig', index=False)
 
 # data_new = data.groupby(['二级分类', '报告期'], as_index=False).\
 #     apply(lambda x: diy_mean(x, x['总资产(亿元)']))

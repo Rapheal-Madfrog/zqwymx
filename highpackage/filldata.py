@@ -25,6 +25,14 @@ def rechange(dataframe, col, weight):
 class FillData(object):
     def __init__(self, time_style, time_delta,
                  a_save_path=None, w_save_path=None, if_save=True, constant=True):
+        '''
+        :param str time_style: 'year', 'half_year', 'season', 外层函数定义了
+        :param int time_delta: 预测间隔, 外层函数定义了
+        :param str a_save_path: 文件存放路径
+        :param str w_save_path: 参数存放路径
+        :param bool if_save: 是否保存文件和参数
+        :param bool constant: 预测是否连续, 和time_delta参数一起使用
+        '''
         self.time_style = time_style
         self.time_delta = time_delta
         self.asp = a_save_path
@@ -33,13 +41,15 @@ class FillData(object):
         self.constant = constant
 
     def filldata(self, data, re_data, com_data, ):
-        # 数据处理
+        # 数据处理, 得到的是违约财报数据, 要预测的财报数据, 确定为尚未违约的财报数据
         re_data, pre_data, data = CutData(self.time_style, self.time_delta,
                                           self.constant
                                           ).cutdata(data, re_data, com_data)
+
         fin_col = list(re_data)
         # 去除异常值
-        data = data.merge(com_data.loc[:, ['名称', '二级分类']], on='名称')   # type: pandas.Dataframe
+        # 未违约财报数据拼接公司信息
+        data = data.merge(com_data.loc[:, ['名称', '二级分类']], on='名称')   # type: pd.DataFrame
         drop_out = DROPOUT(model='gauss', g_alpha=2.5)
         drop_out_list = data.columns[3:-2]
         drop_out_list = [i for i in drop_out_list if '亿元' not in i]
@@ -55,12 +65,12 @@ class FillData(object):
         a = pd.concat([re_data, pre_data, data], sort=False)[fin_col]
         del data, re_data, pre_data, fin_col
         # 加特征
-        a['whether_chouzi'] = [1 if i < 0 else 0 for i in a['筹资活动现金流(亿元)']]
-        a['whether_jin'] = [1 if i < 0 else 0 for i in a['净利润(亿元)']]
-        a['whether_liu'] = [1 if i < 2 else 0 for i in a['流动比率']]
-        a['whether_su'] = [1 if i < 1 else 0 for i in a['速动比率']]
-        a['whether_d/a'] = [1 if i > 0.5 else 0 for i in a['短期债务/总债务']]
-        a['whether_h/d'] = [1 if i < 0.2 else 0 for i in a['货币资金/短期债务']]
+        a['chouzi_less_0'] = [1 if i < 0 else 0 for i in a['筹资活动现金流(亿元)']]
+        a['jinglirun_less_0'] = [1 if i < 0 else 0 for i in a['净利润(亿元)']]
+        a['liudongbilv_less_2'] = [1 if i < 2 else 0 for i in a['流动比率']]
+        a['sudongbilv_less_1'] = [1 if i < 1 else 0 for i in a['速动比率']]
+        a['dz/zz_greater_0.5'] = [1 if i > 0.5 else 0 for i in a['短期债务/总债务']]
+        a['hb/dz_less_0.2'] = [1 if i < 0.2 else 0 for i in a['货币资金/短期债务']]
         gc.collect()
         # 自定义标准化
         weight_dict = {}
@@ -75,6 +85,7 @@ class FillData(object):
         com_flist = ['名称', '是否交通', '一级分类', '企业性质', '是否上市', '最新评级']
         a = a.merge(com_data[com_flist], on='名称')
         com_flist_ = com_flist.copy()
+
         for o in ['名称', '一级分类', '最新评级']:
             com_flist_.remove(o)
         for i in com_flist_:

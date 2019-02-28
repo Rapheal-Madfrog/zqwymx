@@ -7,8 +7,12 @@ from scipy import stats
 
 class DROPOUT(object):
     def __init__(self, model='Confidence interval', t_alpha=0.95, g_alpha=2, IQR_rate=1.5, head_tail=0.95):
-        ''' modle: 'Confidence interval','gauss','box','head_tail',
-            default = 'Confidence interval'
+        '''
+        :param str model: 'Confidence interval','gauss','box','head_tail', default = 'Confidence interval'
+        :param float t_alpha: t分布, x置信区间
+        :param float g_alpha: 高斯分布, x标准差
+        :param float IQR_rate: 分位数, x个(三分位数-一分位数)
+        :param float head_tail: 分位数, 头尾x分位数
         '''
         assert isinstance(model, str)
         self.model = model

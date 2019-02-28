@@ -6,7 +6,15 @@ import pandas as pd
 
 class Time_Trim(object):
     def __init__(self, time_style, delta):
-        ''' time_type: year, half_year, season'''
+        '''
+        :param str time_style: 时间类型
+        :param int delta: 时间单位位移间隔
+        demo:
+        d = pd.to_datetime('2018-02-02')
+        c = Time_Trim('year', 0)
+        c.get_time(d)
+        output: Timestamp('2018-12-31 00:00:00')
+        '''
         self.time_style = time_style
         self.delta = delta
 
